@@ -1,0 +1,32 @@
+#!/bin/bash
+LOG="./fileWatch`date +%k%M%S`.log"
+TMPBACKUP="/tmp/`date +%s`"
+TMP="/tmp/`date +%s`.sha1"
+
+if [ -z $1 ]; then
+	echo "Supply the file you wish to moniter as the argument."
+	exit
+fi
+
+FILE=$1
+echo "Your tmp file location is $TMP"
+echo "Your backup file location is $TMPBACKUP"
+echo "Your file is $FILE"
+echo "Your log file is $LOG"
+touch $LOG
+
+sha1sum $FILE > $TMP
+cat $FILE > $TMPBACKUP
+echo "Monitoring file..."
+while [ 1==1  ]
+do	
+	sha1sum -c $TMP > /dev/null
+	if [ $? -eq 1 ]; then
+		echo "Difference found! Logged in $LOG."
+		echo "`date`" >> $LOG
+		echo "`diff $FILE $TMPBACKUP`" >> $LOG
+		echo "" >> $LOG
+		cat $TMPBACKUP > $FILE
+	fi
+	sleep 3
+done
